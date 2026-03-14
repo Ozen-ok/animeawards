@@ -22,8 +22,9 @@ votante_atual = st.sidebar.selectbox("👤 Quem está votando?", votantes)
 
 # Listas de Animes (Ajuste conforme necessário)
 animes_op = [
-    {"nome": "Solo Leveling S2 (OP)", "link": "https://www.youtube.com/watch?v=sgnYEfM7U2U"},
-    {"nome": "Hikaru Died (OP)", "link": "https://www.youtube.com/watch?v=UP7la6a1H1g"}
+    {"nome": "ReawakeR (feat. Felix of Stray Kids) by LiSA", "link": "https://www.youtube.com/watch?v=sgnYEfM7U2U"},
+    {"nome": "Saikai (再会) by Vaundy", "link": "https://www.youtube.com/watch?v=UP7la6a1H1g"},
+    {"nome": "Kakumei Douchuu (革命道中) by AiNA THE END (アイナ・ジ・エンド)", "link": "https://www.youtube.com/watch?v=DCCRNzKvWRg"},
 ]
 
 animes_ed = [
@@ -74,7 +75,7 @@ st.subheader("📊 Resultados Gerais")
 if votos_db:
     df = pd.DataFrame(votos_db)
     
-    with st.expander("Votos Detalhados (Sem índice 0!)"):
+    with st.expander("Votos Detalhados"):
         st.dataframe(df, use_container_width=True, hide_index=True)
     
     # Ranking por Categoria
@@ -83,7 +84,12 @@ if votos_db:
     
     if not df_cat.empty:
         ranking = df_cat.groupby("Anime")["Nota"].mean().reset_index()
-        ranking = ranking.sort_values(by="Nota", ascending=False)
-        st.table(ranking.assign(Nota=ranking['Nota'].map('{:,.2f}'.format))) # Formatação limpa
+        ranking = ranking.sort_values(by="Nota", ascending=False).reset_index(drop=True)
+        
+        # Adiciona 1 ao índice para começar do 1 (1º lugar, 2º lugar...)
+        ranking.index = ranking.index + 1
+        
+        # Exibe como dataframe (que aceita esconder o índice) em vez de table
+        st.dataframe(ranking.style.format(precision=2), use_container_width=True, hide_index=True)
     else:
         st.info("Ainda não há votos nesta categoria.")
