@@ -40,7 +40,6 @@ if len(animes_pendentes) > 0:
     link_atual = anime_atual["link"]
     
     st.subheader(f"🎵 Avaliando agora: {nome_anime}")
-    st.write(f"**🎬 Link do Vídeo:** [Assista aqui]({link_atual})")
     
     # Player do YouTube
     st.video(link_atual)
