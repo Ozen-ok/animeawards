@@ -89,7 +89,7 @@ def sistema_votacao(lista_animes, categoria):
     if animes_pendentes:
         anime_atual = animes_pendentes[0]
         st.subheader(f"Avaliar: {anime_atual['musica']} ({anime_atual['exibicao']})")
-        st.video(anime_atual["link"])
+        st.video(anime_atual["link"], autoplay=True)
         
         nota = st.slider(f"Nota para {anime_atual['exibicao']}", 0.0, 10.0, 5.0, 0.5, key=f"n_{categoria}_{anime_atual['exibicao']}")
         
