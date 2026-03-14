@@ -6,78 +6,84 @@ st.set_page_config(page_title="CINEMINHAINHA ANIME AWARDS 🏆", page_icon="🎬
 # Banco de dados na memória do servidor
 @st.cache_resource
 def pegar_banco_de_votos():
+    # Agora o banco diferencia a categoria (Opening ou Ending)
     return []
 
 votos_db = pegar_banco_de_votos()
 
-st.title("🏆 CINEMINHAINHA ANIME AWARDS - Aberturas e Encerramentos")
-st.write("Escolha seu nome, assista ao vídeo e dê sua nota!")
+st.title("🏆 CINEMINHAINHA ANIME AWARDS")
 
-# 1. Seletor de Votantes (Os 5 jurados)
+# 1. Divisão por Categorias usando Tabs
+tab_op, tab_ed = st.tabs(["🎵 Aberturas (Openings)", "🎞️ Encerramentos (Endings)"])
+
+# Configuração comum
 votantes = ["Chrystian", "Mateus", "Lucas", "Giovana", "Gustavo"]
-votante_atual = st.selectbox("👤 Quem está votando agora?", votantes)
+votante_atual = st.sidebar.selectbox("👤 Quem está votando?", votantes)
 
-st.divider()
-
-# 2. Lista dos animes (Ajuste os nomes e links reais aqui)
-animes = [
-    {"nome": "Solo Leveling Season 2: Arise from the Shadow", "link": "https://www.youtube.com/watch?v=sgnYEfM7U2U"},
-    {"nome": "The Summer Hikaru Died", "link": "https://www.youtube.com/watch?v=UP7la6a1H1g"},
-    {"nome": "'Kakumei Douchuu (革命道中)' by AiNA THE END (アイナ・ジ・エンド)", "link": "https://www.youtube.com/watch?v=DCCRNzKvWRg"}
+# Listas de Animes (Ajuste conforme necessário)
+animes_op = [
+    {"nome": "Solo Leveling S2 (OP)", "link": "https://www.youtube.com/watch?v=sgnYEfM7U2U"},
+    {"nome": "Hikaru Died (OP)", "link": "https://www.youtube.com/watch?v=UP7la6a1H1g"}
 ]
 
-# Descobre em quais animes o votante atual JÁ votou
-votos_do_usuario = [v["Anime"] for v in votos_db if v["Votante"] == votante_atual]
+animes_ed = [
+    {"nome": "AiNA THE END (ED)", "link": "https://www.youtube.com/watch?v=DCCRNzKvWRg"}
+]
 
-# Filtra a lista para mostrar apenas os que ele AINDA NÃO votou
-animes_pendentes = [a for a in animes if a["nome"] not in votos_do_usuario]
+def sistema_votacao(lista_animes, categoria):
+    # Filtra votos do usuário NESTA categoria
+    votos_usuario_cat = [v["Anime"] for v in votos_db if v["Votante"] == votante_atual and v["Categoria"] == categoria]
+    animes_pendentes = [a for a in lista_animes if a["nome"] not in votos_usuario_cat]
 
-# 3. Lógica da Fila Automática
-if len(animes_pendentes) > 0:
-    # Pega sempre o próximo anime da fila
-    anime_atual = animes_pendentes[0]
-    nome_anime = anime_atual["nome"]
-    link_atual = anime_atual["link"]
-    
-    st.subheader(f"🎵 Avaliando agora: {nome_anime}")
-    
-    # Player do YouTube
-    st.video(link_atual)
-    
-    # IMPORTANTE: A key única no slider impede que a nota do anime anterior "vaze" pro próximo
-    nota = st.slider("⭐ Que nota essa abertura/ending merece?", min_value=0.0, max_value=10.0, value=5.0, step=0.5, key=f"nota_{nome_anime}")
-
-    # 4. Salvar o Voto
-    if st.button("Salvar Voto e Ir para o Próximo ⏭️"):
-        votos_db.append({
-            "Votante": votante_atual,
-            "Anime": nome_anime,
-            "Nota": nota
-        })
-        # Recarrega a página instantaneamente para puxar o próximo da fila
-        st.rerun()
+    if animes_pendentes:
+        anime_atual = animes_pendentes[0]
+        st.subheader(f"Avaliar: {anime_atual['nome']}")
+        st.video(anime_atual["link"])
         
-else:
-    # Quando zerar a fila de animes pendentes pra essa pessoa
-    st.success(f"🎉 Aêê! {votante_atual} já avaliou todas as aberturas e encerramentos!")
+        nota = st.slider(f"Nota para {anime_atual['nome']}", 0.0, 10.0, 5.0, 0.5, key=f"n_{categoria}_{anime_atual['nome']}")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button(f"Salvar Voto ⏭️", key=f"btn_{categoria}_{anime_atual['nome']}"):
+                votos_db.append({"Votante": votante_atual, "Anime": anime_atual['nome'], "Nota": nota, "Categoria": categoria})
+                st.rerun()
+    else:
+        st.success(f"✅ {votante_atual} concluiu esta categoria!")
 
+    # Lógica de "Voltar Voto" (Deleta o último voto deste usuário nesta categoria)
+    if votos_usuario_cat:
+        st.divider()
+        ultimo_anime = votos_usuario_cat[-1]
+        if st.button(f"⏪ Mudar voto de: {ultimo_anime}", key=f"back_{categoria}"):
+            for i, v in enumerate(votos_db):
+                if v["Votante"] == votante_atual and v["Anime"] == ultimo_anime and v["Categoria"] == categoria:
+                    votos_db.pop(i)
+                    st.rerun()
+
+# Renderiza os sistemas nas abas
+with tab_op:
+    sistema_votacao(animes_op, "Opening")
+
+with tab_ed:
+    sistema_votacao(animes_ed, "Ending")
+
+# 5. Resultados Consolidados
 st.divider()
-
-# 5. Tabela de Resultados Ao Vivo
-st.subheader("📊 Resultados em Tempo Real")
+st.subheader("📊 Resultados Gerais")
 
 if votos_db:
     df = pd.DataFrame(votos_db)
     
-    # Mostra os votos individuais
-    with st.expander("Ver todos os votos detalhados"):
-        st.dataframe(df, use_container_width=True)
+    with st.expander("Votos Detalhados (Sem índice 0!)"):
+        st.dataframe(df, use_container_width=True, hide_index=True)
     
-    # Calcula o Ranking (Média de cada anime)
-    st.write("**🏆 Ranking Atual (Média das Notas):**")
-    ranking = df.groupby("Anime")["Nota"].mean().reset_index()
-    ranking = ranking.sort_values(by="Nota", ascending=False).reset_index(drop=True)
+    # Ranking por Categoria
+    cat_selecionada = st.selectbox("Ver ranking de:", ["Opening", "Ending"])
+    df_cat = df[df["Categoria"] == cat_selecionada]
     
-    st.dataframe(ranking, use_container_width=True, hide_index=True)
-else:
-    st.info("Nenhum voto registrado ainda. Comecem os trabalhos!")
+    if not df_cat.empty:
+        ranking = df_cat.groupby("Anime")["Nota"].mean().reset_index()
+        ranking = ranking.sort_values(by="Nota", ascending=False)
+        st.table(ranking.assign(Nota=ranking['Nota'].map('{:,.2f}'.format))) # Formatação limpa
+    else:
+        st.info("Ainda não há votos nesta categoria.")
