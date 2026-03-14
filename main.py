@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Anime Awards 🏆", page_icon="🎬", layout="centered")
+st.set_page_config(page_title="CINEMINHAINHA ANIME AWARDS 🏆", page_icon="🎬", layout="centered")
 
 # Banco de dados na memória do servidor
 @st.cache_resource
@@ -10,7 +10,7 @@ def pegar_banco_de_votos():
 
 votos_db = pegar_banco_de_votos()
 
-st.title("🏆 Anime Awards - Aberturas e Encerramentos")
+st.title("🏆 CINEMINHAINHA ANIME AWARDS - Aberturas e Encerramentos")
 st.write("Escolha seu nome, assista ao vídeo e dê sua nota!")
 
 # 1. Seletor de Votantes (Os 5 jurados)
@@ -79,6 +79,6 @@ if votos_db:
     ranking = df.groupby("Anime")["Nota"].mean().reset_index()
     ranking = ranking.sort_values(by="Nota", ascending=False).reset_index(drop=True)
     
-    st.dataframe(ranking, use_container_width=True)
+    st.dataframe(ranking, use_container_width=True, hide_index=True)
 else:
     st.info("Nenhum voto registrado ainda. Comecem os trabalhos!")
