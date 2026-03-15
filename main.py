@@ -1,14 +1,37 @@
 import streamlit as st
 import pandas as pd
+import requests
 
 st.set_page_config(page_title="CINEMINHAINHA ANIME AWARDS 🏆", page_icon="🎬", layout="centered")
 
-# Banco de dados na memória do servidor
-@st.cache_resource
-def pegar_banco_de_votos():
-    return []
+# --- BANCO DE DADOS NA NUVEM (JSONBin.io) ---
+BIN_ID = "69b6b879b7ec241ddc6e431b"
+API_KEY = "$2a$10$AJwD1gnm1M/EFnPbtr3S3.A9SnDRAsG43Ntk06D.cYcxOdnKGpmby"
+URL = f"https://api.jsonbin.io/v3/b/{BIN_ID}"
 
-votos_db = pegar_banco_de_votos()
+HEADERS = {
+    "Content-Type": "application/json",
+    "X-Master-Key": API_KEY
+}
+
+def carregar_votos_da_nuvem():
+    try:
+        resposta = requests.get(URL, headers=HEADERS)
+        if resposta.status_code == 200:
+            return resposta.json().get("record", [])
+        return []
+    except:
+        return []
+
+def salvar_votos_na_nuvem(dados_atualizados):
+    try:
+        requests.put(URL, json=dados_atualizados, headers=HEADERS)
+    except:
+        pass
+
+# Inicia o banco puxando direto da nuvem
+votos_db = carregar_votos_da_nuvem()
+# --------------------------------------------
 
 st.title("🏆 CINEMINHAINHA ANIME AWARDS")
 st.write("Escolha seu nome, assista ao vídeo e dê sua nota!")
@@ -97,9 +120,11 @@ def sistema_votacao(lista_animes, categoria):
         with col1:
             if st.button(f"Salvar Voto ⏭️", key=f"btn_{categoria}_{anime_atual['exibicao']}"):
                 votos_db.append({"Votante": votante_atual, "Anime": anime_atual['exibicao'], "Nota": nota, "Categoria": categoria})
+                salvar_votos_na_nuvem(votos_db)  # <-- MANDA PRA NUVEM
                 st.rerun()
     else:
         st.success(f"✅ {votante_atual} concluiu esta categoria!")
+        st.balloons() # <-- Adicionei uma surpresa aqui pra quando alguém zerar a lista!
 
     # Lógica de "Voltar Voto"
     if votos_usuario_cat:
@@ -109,7 +134,9 @@ def sistema_votacao(lista_animes, categoria):
             for i, v in enumerate(votos_db):
                 if v["Votante"] == votante_atual and v["Anime"] == ultimo_anime and v["Categoria"] == categoria:
                     votos_db.pop(i)
+                    salvar_votos_na_nuvem(votos_db)  # <-- ATUALIZA A NUVEM
                     st.rerun()
+                    break
 
 # Renderiza os sistemas nas abas
 with tab_op:
@@ -137,21 +164,5 @@ if votos_db:
         ranking = ranking.sort_values(by="Nota", ascending=False).reset_index(drop=True)
         ranking.index = ranking.index + 1
         st.dataframe(ranking.style.format(precision=2), use_container_width=True)
-    
-    # --- NOVO: BOTÃO DE DOWNLOAD ---
-    st.divider()
-    
-    # Converte o DataFrame para CSV
-    # Converte o DataFrame para CSV no padrão do Excel em Português
-    csv = df.to_csv(index=False, sep=';').encode('utf-8-sig')
-    
-    # Cria o botão de download
-    st.download_button(
-        label="💾 Baixar todos os votos (Planilha CSV)",
-        data=csv,
-        file_name='votos_cineminhainha_awards.csv',
-        mime='text/csv',
-    )
-
 else:
     st.info("Ainda não há votos nesta categoria.")
