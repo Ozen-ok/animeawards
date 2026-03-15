@@ -114,7 +114,7 @@ def sistema_votacao(lista_animes, categoria):
         st.subheader(f"{anime_atual['musica']} ({anime_atual['exibicao']})")
         st.video(anime_atual["link"], autoplay=True)
         
-        nota = st.slider(f"Nota para {anime_atual['exibicao']}", 0.0, 10.0, 5.0, 0.5, key=f"n_{categoria}_{anime_atual['exibicao']}")
+        nota = st.slider(f"Nota para {anime_atual['exibicao']}", 0.0, 10.0, 7.0, 0.5, key=f"n_{categoria}_{anime_atual['exibicao']}")
         
         col1, col2 = st.columns(2)
         with col1:
