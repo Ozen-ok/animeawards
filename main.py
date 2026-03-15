@@ -137,5 +137,20 @@ if votos_db:
         ranking = ranking.sort_values(by="Nota", ascending=False).reset_index(drop=True)
         ranking.index = ranking.index + 1
         st.dataframe(ranking.style.format(precision=2), use_container_width=True)
-    else:
-        st.info("Ainda não há votos nesta categoria.")
+    
+    # --- NOVO: BOTÃO DE DOWNLOAD ---
+    st.divider()
+    
+    # Converte o DataFrame para CSV
+    csv = df.to_csv(index=False).encode('utf-8')
+    
+    # Cria o botão de download
+    st.download_button(
+        label="💾 Baixar todos os votos (Planilha CSV)",
+        data=csv,
+        file_name='votos_cineminhainha_awards.csv',
+        mime='text/csv',
+    )
+    
+else:
+    st.info("Ainda não há votos nesta categoria.")
