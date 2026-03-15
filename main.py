@@ -142,7 +142,8 @@ if votos_db:
     st.divider()
     
     # Converte o DataFrame para CSV
-    csv = df.to_csv(index=False).encode('utf-8')
+    # Converte o DataFrame para CSV no padrão do Excel em Português
+    csv = df.to_csv(index=False, sep=';').encode('utf-8-sig')
     
     # Cria o botão de download
     st.download_button(
@@ -151,6 +152,6 @@ if votos_db:
         file_name='votos_cineminhainha_awards.csv',
         mime='text/csv',
     )
-    
+
 else:
     st.info("Ainda não há votos nesta categoria.")
