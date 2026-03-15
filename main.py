@@ -124,7 +124,7 @@ def sistema_votacao(lista_animes, categoria):
                 st.rerun()
     else:
         st.success(f"✅ {votante_atual} concluiu esta categoria!")
-        st.balloons() # <-- Adicionei uma surpresa aqui pra quando alguém zerar a lista!
+        #st.balloons() # <-- Adicionei uma surpresa aqui pra quando alguém zerar a lista!
 
     # Lógica de "Voltar Voto"
     if votos_usuario_cat:
